@@ -1,0 +1,163 @@
+---
+title: "Hurdle Poisson Regression: A Deep Dive"
+author: "Your NAME goes here"
+format: 
+  revealjs: 
+    embed-resources: true
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+# Load the necessary libraries
+
+library(ggplot2)
+library(tidyverse)
+library(tidymodels)
+library(gt)
+library(MASS)
+library(patchwork)
+library(moderndive)
+library(pscl)
+library(AER)
+```
+
+# Introduction
+
+Hurdle Poisson Regression is a **two-part statistical model** used for count data with **excess zeros** and **overdispersion**.
+
+### **Motivation**
+- Traditional **Poisson regression** assumes that the **mean equals variance**, which is often not true.
+- Many datasets contain **a large proportion of zeros**, requiring a **separate modeling approach**.
+- **Examples:**
+  - **Doctor visits:** Some people never visit a doctor, while others visit frequently.
+  - **Insurance claims:** Many policyholders never file a claim, while others do multiple times.
+  - **Patent filings:** Some companies file zero patents, others file multiple.
+
+---
+
+# Methods
+
+The **Hurdle Poisson Model** has **two components**:
+
+### 1️⃣ **Zero vs. Non-Zero (Binary Model)**
+- Uses **logistic regression** to predict whether \( Y = 0 \) or \( Y > 0 \):
+$$
+\log \left( \frac{P(Y = 0)}{P(Y > 0)} \right) = X \beta_0
+$$
+
+### 2️⃣ **Positive Counts (Truncated Poisson Model)**
+- Once \( Y > 0 \), we model **only positive counts** using Poisson regression:
+$$
+P(Y = y | Y > 0) = \frac{\lambda^y e^{-\lambda}}{y!}, \quad y > 0
+$$
+- Mean parameter modeled as:
+$$
+\log(\lambda) = X \beta
+$$
+
+---
+
+# Example Dataset
+
+We use the **DoctorVisits** dataset from the `AER` package:
+
+```{r}
+# Load dataset
+data("DoctorVisits", package = "AER")
+str(DoctorVisits)
+```
+
+**Key Variables:**
+- `visits` → Number of doctor visits.
+- `illness` → Number of illnesses in past year.
+- `age`, `income` → Demographic variables.
+
+---
+
+# Data Visualization
+
+```{r}
+#| echo: false
+#| fig-align: center
+ggplot(DoctorVisits, aes(x = visits)) +
+  geom_histogram(binwidth = 1, fill = "blue", alpha = 0.5) +
+  labs(title = "Distribution of Doctor Visits", x = "Number of Visits", y = "Frequency")
+```
+
+**Observation:** Many zeros in the data, making it a **good candidate** for the Hurdle model.
+
+---
+
+# Application of Methods in R
+
+### **Fitting a Hurdle Poisson Model**
+```{r}
+# Fit Hurdle Poisson Model
+hurdle_model <- hurdle(visits ~ illness + age + income, data = DoctorVisits, dist = "poisson")
+summary(hurdle_model)
+```
+
+### **Key Outputs:**
+- **Zero-Hurdle Component** (Logistic regression)
+- **Positive Counts Component** (Truncated Poisson model)
+
+---
+
+# Results: Model Predictions vs. Actual Data
+
+```{r}
+DoctorVisits$fitted <- predict(hurdle_model, type = "response")
+
+ggplot(DoctorVisits, aes(x = fitted, y = visits)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Fitted vs. Actual Counts", x = "Fitted Values", y = "Actual Visits")
+```
+
+---
+
+# Comparison with Other Models
+
+| Model | Strengths | Weaknesses |
+|--------|------------|------------|
+| **Poisson Regression** | Simple, interpretable | Can't handle excess zeros |
+| **Negative Binomial** | Handles overdispersion | Still assumes one process for counts |
+| **Hurdle Poisson** | Models zeros separately, more flexible | More complex |
+
+---
+
+# Assumptions & Considerations
+
+✅ **Overdispersion** – Variance > Mean.  
+✅ **Independent Observations** – Each count is independent.  
+✅ **Zero-Inflation Process** – Zeros come from a separate mechanism.  
+
+⚠️ **Not Ideal When:**  
+- Zeros do **not** come from a distinct process.
+- Simple Poisson regression fits well.
+
+---
+
+# Conclusion
+
+✅ **Hurdle Poisson Regression** is ideal for count data with **excess zeros**.  
+✅ It **separates zero outcomes** from **positive counts** for better modeling.  
+✅ Useful in **healthcare, insurance, economics**, and more.  
+
+🚀 **Try it in R using `pscl::hurdle()`!**
+
+```{r}
+# Recap: Fitting a Hurdle Poisson Model
+hurdle_model <- hurdle(visits ~ illness + age + income, data = DoctorVisits, dist = "poisson")
+```
+
+---
+
+# Q&A 🎤
+
+💡 Any questions? Let's discuss! 🚀
