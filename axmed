@@ -133,9 +133,9 @@ ggplot(DoctorVisits, aes(x = fitted, y = visits)) +
 
 # Assumptions & Considerations
 
-✅ **Overdispersion** – Variance > Mean.  
-✅ **Independent Observations** – Each count is independent.  
-✅ **Zero-Inflation Process** – Zeros come from a separate mechanism.  
+*Overdispersion** – Variance > Mean.  
+**Independent Observations** – Each count is independent.  
+**Zero-Inflation Process** – Zeros come from a separate mechanism.  
 
 ⚠️ **Not Ideal When:**  
 - Zeros do **not** come from a distinct process.
@@ -145,9 +145,9 @@ ggplot(DoctorVisits, aes(x = fitted, y = visits)) +
 
 # Conclusion
 
-✅ **Hurdle Poisson Regression** is ideal for count data with **excess zeros**.  
-✅ It **separates zero outcomes** from **positive counts** for better modeling.  
-✅ Useful in **healthcare, insurance, economics**, and more.  
+ **Hurdle Poisson Regression** is ideal for count data with **excess zeros**.  
+It **separates zero outcomes** from **positive counts** for better modeling.  
+Useful in **healthcare, insurance, economics**, and more.  
 
 🚀 **Try it in R using `pscl::hurdle()`!**
 
@@ -158,6 +158,4 @@ hurdle_model <- hurdle(visits ~ illness + age + income, data = DoctorVisits, dis
 
 ---
 
-# Q&A 🎤
-
-💡 Any questions? Let's discuss! 🚀
+thanks and looking forward your peers review
