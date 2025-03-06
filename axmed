@@ -137,7 +137,7 @@ ggplot(DoctorVisits, aes(x = fitted, y = visits)) +
 **Independent Observations** – Each count is independent.  
 **Zero-Inflation Process** – Zeros come from a separate mechanism.  
 
-⚠️ **Not Ideal When:**  
+**Not Ideal When:**  
 - Zeros do **not** come from a distinct process.
 - Simple Poisson regression fits well.
 
