@@ -1,0 +1,119 @@
+---
+title: "Hurdle Poisson Regression"
+format: 
+  revealjs: 
+    embed-resources: true
+editor: visual
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+library(ggplot2)
+library(tidyverse)
+library(gt)
+library(MASS)
+library(moderndive)
+library(pscl)
+library(AER)
+
+
+```
+
+# Introduction to count data
+
+When dealing with count data (eg. the number of times an event occurs), it's important to choose the right statistical model. Poisson regression is commonly used to model count data, but it has limitations, especially when there are excess zeros in the data. This is where **Hurdle Poisson Regression** comes into play.
+
+------------------------------------------------------------------------
+
+The **Hurdle Poisson Regression** model is a **two- part model** designed for count data that:
+
+-   **Handles excess zeros** (more zeros than a Poisson model would predict).
+
+-   Uses a **two-stage process**:
+
+    1.  **Zero vs. Non-zero**: The first part models the probability of having a zero count using a **binary** model (logistic regression).
+
+    2.  **Positive counts**: The second part models the **positive counts** (counts greater than zero) using a **Poisson regression**.
+
+Essentially, the hurdle model “hurdles” the zero counts in the data, treating them as a separate issue and modeling the counts greater than zero separately.
+
+------------------------------------------------------------------------
+
+#### **When to Use Hurdle Poisson Regression?**
+
+Hurdle Poisson regression is appropriate when:
+
+-   The data exhibits **excess zeros** (more zero counts than expected).
+
+-   The **Poisson model** doesn’t fit well because it assumes the mean and variance of counts are equal.
+
+-   The **zero counts** represent a distinct process from the counts greater than zero (i.e., the occurrence of a zero count is driven by different factors than the occurrence of a positive count).
+
+Examples include:
+
+-   **Insurance claims**: Many people have no claims at all, and others may have multiple claims.
+
+-   **Doctor visits**: Many people might not visit a doctor in a given period, but others might visit multiple times.
+
+# Methods
+
+The hurdle Poisson model has two components:
+
+1.  Zero vs Non-zero (Binary model)
+
+    uses logistic regression to predict where (Y = 0 or Y \>0 )
+
+$$
+\log \left( \frac{P(Y = 0)}{P(Y> 0 )} \right)
+$$
+
+2.  Positive Counts (Truncated Poisson Model):
+
+    $$
+    P(Y = y|Y >0 ) = \frac{\lambda^y e^{-\lambda}}{y!}, ~~~~y > 0
+    $$
+
+# Example Dataset
+
+We use the **DoctorVisits** dataset from the AER package:
+
+```{r}
+
+data("DoctorVisits", package = "AER")
+colnames(DoctorVisits)
+
+```
+
+```{r}
+head(DoctorVisits)
+```
+
+# Data Visualisation
+
+```{r}
+#|echo: false
+#|eval: true
+#|ffig-align: center
+
+ggplot(DoctorVisits, aes(x = visits)) +
+  geom_histogram(binwidth = 1, fill = "blue", alpha = 0.5)
+
+  
+
+```
+
+**Observations**: Many zeros in the data, making it a good **candidate** for the the hurdle model.
+
+## Fitting a hurdle Poisson Model 
+
+```{r}
+#| eval: true
+hurdle.model <- hurdle(visits ~ illness + age + income, data = DoctorVisits, dist = "poisson")
+
+summary(hurdle.model)
+```
