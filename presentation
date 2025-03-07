@@ -1,0 +1,177 @@
+---
+title: "Hurdle Poisson Regression"
+format: 
+  revealjs: 
+    embed-resources: true
+    smaller: true
+    background-color: "black"
+editor: visual
+editor_options: 
+  chunk_output_type: inline
+---
+
+{r}
+#| echo: false
+#| warning: false
+#| message: false
+
+library(ggplot2)
+library(pscl)
+library(AER)
+library(tidyverse)
+library(gt)
+library(MASS)
+library(moderndive)
+
+Introduction
+
+Welcome! Today,
+
+we’ll explore Hurdle Poisson Regression, technique for modeling count data with excess zeros.
+
+break down its components, explain its mathematical foundation,
+
+and demonstrate its implementation in R using a real-world dataset
+
+What We Will Cover
+
+What is Hurdle Poisson Regression?
+
+Why do we need it?
+
+How does it works mathematically ?
+
+A practical example using R.
+
+Key taays.
+
+Understanding Count Data
+
+Count data arises when measuring discrete occurrences (e.g., doctor visits, insurance claims, patent filings). Poisson regression is commonly used but struggles when: - Excess zeros are present. - Variance is greater than the mean (overdispersion). This is where Hurdle Poisson Regression comes in!
+
+Hurdle Poisson Regression: The Concept
+
+A two-part model designed for count data with excess zeros:
+
+Zero vs. Non-Zero: Uses logistic regression to predict whether an event happens at all.
+
+Positive Counts: If an event happens, models the count using truncated Poisson regression.
+
+Why Use Hurdle Poisson Regression?
+
+When the data has excess zeros.
+
+When a standard Poisson model fails.
+
+When the process generating zeros is different from the process generating positive counts.
+
+Examples: - Insurance claims: Most people make zero claims, while some make multiple. - Doctor visits: Many people never visit a doctor, while others visit frequently. - Patent filings: Some companies file zero patents, others file multiple.
+
+Mathematical Model
+
+1. Zero-Inflation (Binary Model):
+
+$$
+\log \left( \frac{P(Y = 0)}{P(Y > 0)} \right) = X \beta_0
+$$
+
+models the log-odds of zero vs.non-zero counts. Exponentiation gives the odds ratio, making the interpretation easier.
+
+2. Positive Count (Truncated Poisson Model):
+
+The conditional probability of observing a positive count is
+
+$$
+P(Y = y | Y > 0) = \frac{\lambda^y e^{-\lambda}}{y!}, ~~~~ y > 0,
+$$Models only positive counts, where the mean count $( \lambda ) ~is ~log ~transformed~as~( \log(\lambda) = X\beta )$
+
+3. Complete Hurdle Model Likelihood Function
+
+The likelihood function for the Hurdle Poisson Regression combines the two parts:
+
+$$
+L(\theta) = \prod_{i=1}^{n} \left[ P(Y_i = 0 | X_i)^{1 - I(Y_i > 0)} \times P(Y_i = y | Y > 0, X_i)^{I(Y_i > 0)} \right],
+$$
+
+Where:
+
+$I(Y_i > 0)$ is an indicator function that equals 1 if Y > 0 and 0 otherwise.
+
+The first term represents the probability of zeros from the logistic model.
+
+The second term represents the probability of positive counts from the poisson model.
+
+The zeros and positive counts are modeled separately.
+
+Example Dataset: Doctor Visits
+
+We use the DoctorVisits dataset from the AER package:
+
+{r}
+data("DoctorVisits", package = "AER")
+str(DoctorVisits)
+
+Key Variables: - visits → Number of doctor visits. - illness → Number of illnesses in past year. - age, income → Demographic variables.
+
+Data Visualization
+
+{r}
+#| echo: false
+#| fig-align: center
+
+ggplot(DoctorVisits, aes(x = visits)) +
+  geom_histogram(binwidth = 1, fill = "blue", alpha = 0.5) +
+  labs(title = "Distribution of Doctor Visits", x = "Number of Visits", y = "Frequency")
+
+Observations: Many zeros suggest Hurdle Poisson is a good fit.
+
+Fitting a Hurdle Poisson Model
+
+{r}
+#| eval: true
+hurdle_model <- hurdle(visits ~ illness + age + income, data = DoctorVisits, dist = "poisson")
+summary(hurdle_model)
+
+Zero-Hurdle Component: Logistic regression for probability of zero visits.
+
+Positive Counts Component: Poisson regression for counts greater than zero.
+
+Results: Model Fit vs. Actual Data
+
+{r}
+DoctorVisits$fitted <- predict(hurdle_model, type = "response")
+
+ggplot(DoctorVisits, aes(x = fitted, y = visits)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  labs(title = "Fitted vs. Actual Counts", x = "Fitted Values", y = "Actual Visits")
+
+Observations: The model fits well for zero and positive counts separately.
+
+Comparison with Other Models
+
+Model
+
+Strengths
+
+Weaknesses
+
+Poisson Regression
+
+Simple, interpretable
+
+Fails with excess zeros
+
+Hurdle Poisson
+
+Separates zero and positive counts
+
+More complex
+
+
+
+Key Takeaways
+
+Hurdle Poisson Regression is useful for count data with excess zeros. It models zero counts separately from positive counts. Common applications include healthcare, insurance, and business analytics.
+
+Try it in R using pscl::hurdle()!
